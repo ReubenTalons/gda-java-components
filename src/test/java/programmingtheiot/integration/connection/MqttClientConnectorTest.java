@@ -21,7 +21,7 @@ import programmingtheiot.common.ConfigConst;
 import programmingtheiot.common.ConfigUtil;
 import programmingtheiot.common.IDataMessageListener;
 import programmingtheiot.common.ResourceNameEnum;
-import programmingtheiot.gda.connection.*;
+import programmingtheiot.gda.connection.MqttClientConnector;
 
 /**
  * This test case class contains very basic integration tests for

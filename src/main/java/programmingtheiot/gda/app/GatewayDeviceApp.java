@@ -5,10 +5,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import programmingtheiot.common.ConfigConst;
-import programmingtheiot.gda.system.SystemPerformanceManager;
 
 /**
  * Main GDA application.
@@ -26,7 +29,7 @@ public class GatewayDeviceApp
 	// private var's
 	
 	private String configFile = ConfigConst.DEFAULT_CONFIG_FILE_NAME;
-	private SystemPerformanceManager sysPerfMgr = null;
+	private DeviceDataManager deviceDataManager = null;
 	
 	// constructors
 	
@@ -40,7 +43,7 @@ public class GatewayDeviceApp
 		
 		_Logger.info("Initializing GDA...");
 		
-		this.sysPerfMgr = new SystemPerformanceManager();
+		this.deviceDataManager = new DeviceDataManager();
 	}
 	
 	/**
@@ -54,7 +57,7 @@ public class GatewayDeviceApp
 		
 		_Logger.info("Initializing GDA...");
 		
-		this.sysPerfMgr = new SystemPerformanceManager();
+		this.deviceDataManager = new DeviceDataManager();
 		
 		Map<String, String> argMap = parseArgs(args);
 		if (argMap.containsKey(ConfigConst.CONFIG_FILE_KEY)) {
@@ -133,13 +136,8 @@ public class GatewayDeviceApp
 		_Logger.info("Starting GDA...");
 		
 		try {
-			if (this.sysPerfMgr.startManager()) {
-				_Logger.info("GDA started successfully.");
-			} else {
-				_Logger.warning("Failed to start system performance manager!");
-				
-				stopApp(-1);
-			}
+			this.deviceDataManager.startManager();
+			_Logger.info("GDA started successfully.");
 		} catch (Exception e) {
 			_Logger.log(Level.SEVERE, "Failed to start GDA. Exiting.", e);
 			
@@ -157,11 +155,8 @@ public class GatewayDeviceApp
 		_Logger.info("Stopping GDA...");
 		
 		try {
-			if (this.sysPerfMgr.stopManager()) {
-				_Logger.log(Level.INFO, "GDA stopped successfully with exit code {0}.", code);
-			} else {
-				_Logger.warning("Failed to stop system performance manager!");
-			}
+			this.deviceDataManager.stopManager();
+			_Logger.log(Level.INFO, "GDA stopped successfully with exit code {0}.", code);
 		} catch (Exception e) {
 			_Logger.log(Level.SEVERE, "Failed to cleanly stop GDA. Exiting.", e);
 		}
