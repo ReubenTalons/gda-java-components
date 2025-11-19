@@ -18,9 +18,11 @@ import programmingtheiot.common.ConfigUtil;
 import programmingtheiot.common.IActuatorDataListener;
 import programmingtheiot.common.IDataMessageListener;
 import programmingtheiot.common.ResourceNameEnum;
+
 import programmingtheiot.data.ActuatorData;
 import programmingtheiot.data.SensorData;
 import programmingtheiot.data.SystemPerformanceData;
+
 import programmingtheiot.gda.connection.CoapServerGateway;
 import programmingtheiot.gda.connection.IPersistenceClient;
 import programmingtheiot.gda.connection.IPubSubClient;
@@ -109,6 +111,12 @@ public class DeviceDataManager implements IDataMessageListener
 	
 	public void setActuatorDataListener(String name, IActuatorDataListener listener)
 	{
+		if (listener != null) {
+			// For now, just ignore 'name' - if you need more than one listener,
+			// you can use 'name' to create a map of listener instances
+			this.actuatorDataListener = listener;
+			_Logger.info("Actuator data listener registered: " + name);
+		}
 	}
 	
 	public void startManager()
@@ -137,6 +145,15 @@ public class DeviceDataManager implements IDataMessageListener
 				_Logger.severe("Failed to connect MQTT client to broker.");
 				
 				// TODO: take appropriate action
+			}
+		}
+		
+		// NEW: Start CoAP server if enabled
+		if (this.enableCoapServer && this.coapServer != null) {
+			if (this.coapServer.startServer()) {
+				_Logger.info("CoAP server started.");
+			} else {
+				_Logger.severe("Failed to start CoAP server. Check log file for details.");
 			}
 		}
 		
@@ -171,6 +188,15 @@ public class DeviceDataManager implements IDataMessageListener
 			}
 		}
 		
+		// NEW: Stop CoAP server if enabled
+		if (this.enableCoapServer && this.coapServer != null) {
+			if (this.coapServer.stopServer()) {
+				_Logger.info("CoAP server stopped.");
+			} else {
+				_Logger.severe("Failed to stop CoAP server. Check log file for details.");
+			}
+		}
+		
 		_Logger.info("Stopped DeviceDataManager.");
 	}
 	
@@ -198,8 +224,13 @@ public class DeviceDataManager implements IDataMessageListener
 			_Logger.info("MQTT client enabled and initialized.");
 		}
 		
+		// NEW: Initialize CoAP server if enabled
+		this.enableCoapServer =
+			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE, ConfigConst.ENABLE_COAP_SERVER_KEY);
+		
 		if (this.enableCoapServer) {
-			// TODO: implement this in Lab Module 8
+			this.coapServer = new CoapServerGateway(this);
+			_Logger.info("CoAP server enabled and initialized.");
 		}
 		
 		if (this.enableCloudClient) {

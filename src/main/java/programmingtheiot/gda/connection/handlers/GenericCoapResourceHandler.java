@@ -8,20 +8,15 @@
  * provided within in order to meet the needs of your specific
  * Programming the Internet of Things project.
  */
-
 package programmingtheiot.gda.connection.handlers;
 
 import java.util.logging.Logger;
 
 import org.eclipse.californium.core.CoapResource;
-import org.eclipse.californium.core.coap.CoAP.ResponseCode;
 import org.eclipse.californium.core.server.resources.CoapExchange;
 
-import programmingtheiot.common.ConfigConst;
-import programmingtheiot.common.ConfigUtil;
 import programmingtheiot.common.IDataMessageListener;
 import programmingtheiot.common.ResourceNameEnum;
-
 
 /**
  * Shell representation of class for student implementation.
@@ -36,6 +31,7 @@ public class GenericCoapResourceHandler extends CoapResource
 	
 	// params
 	
+	private IDataMessageListener dataMsgListener = null;
 	
 	// constructors
 	
@@ -84,6 +80,9 @@ public class GenericCoapResourceHandler extends CoapResource
 	
 	public void setDataMessageListener(IDataMessageListener listener)
 	{
+		if (listener != null) {
+			this.dataMsgListener = listener;
+		}
 	}
 	
 }
