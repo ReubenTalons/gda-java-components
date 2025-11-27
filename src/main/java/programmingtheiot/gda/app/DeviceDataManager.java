@@ -23,6 +23,7 @@ import programmingtheiot.data.ActuatorData;
 import programmingtheiot.data.SensorData;
 import programmingtheiot.data.SystemPerformanceData;
 
+import programmingtheiot.gda.connection.CoapClientConnector;
 import programmingtheiot.gda.connection.CoapServerGateway;
 import programmingtheiot.gda.connection.IPersistenceClient;
 import programmingtheiot.gda.connection.IPubSubClient;
@@ -44,12 +45,14 @@ public class DeviceDataManager implements IDataMessageListener
 	
 	private boolean enableMqttClient = false;
 	private boolean enableCoapServer = false;
+	private boolean enableCoapClient = false;
 	private boolean enableCloudClient = false;
 	private boolean enableSmtpClient = false;
 	private boolean enablePersistenceClient = false;
 	
 	private IActuatorDataListener actuatorDataListener = null;
 	private MqttClientConnector mqttClient = null;
+	private CoapClientConnector coapClient = null;
 	private IPubSubClient cloudClient = null;
 	private IPersistenceClient persistenceClient = null;
 	private IRequestResponseClient smtpClient = null;
@@ -231,6 +234,16 @@ public class DeviceDataManager implements IDataMessageListener
 		if (this.enableCoapServer) {
 			this.coapServer = new CoapServerGateway(this);
 			_Logger.info("CoAP server enabled and initialized.");
+		}
+		
+		// NEW: Initialize CoAP client if enabled
+		this.enableCoapClient =
+			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE, ConfigConst.ENABLE_COAP_CLIENT_KEY);
+		
+		if (this.enableCoapClient) {
+			this.coapClient = new CoapClientConnector();
+			this.coapClient.setDataMessageListener(this);
+			_Logger.info("CoAP client enabled and initialized.");
 		}
 		
 		if (this.enableCloudClient) {
