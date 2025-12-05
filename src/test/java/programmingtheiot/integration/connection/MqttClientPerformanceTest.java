@@ -6,7 +6,6 @@
  * 
  * Copyright (c) 2020 - 2025 by Andrew D. King
  */ 
-
 package programmingtheiot.integration.connection;
 
 import static org.junit.Assert.*;
@@ -59,6 +58,7 @@ public class MqttClientPerformanceTest
 	public void setUp() throws Exception
 	{
 		ConfigUtil.getInstance();
+		DataUtil.getInstance();
 		this.mqttClient = new MqttClientConnector();
 	}
 	
@@ -129,6 +129,12 @@ public class MqttClientPerformanceTest
 		SensorData sensorData = new SensorData();
 		
 		String payload = DataUtil.getInstance().sensorDataToJson(sensorData);
+		
+		// Add null check for safety
+		if (payload == null) {
+			payload = "{}";
+		}
+		
 		int payloadLen = payload.length();
 		
 		long startMillis = System.currentTimeMillis();
@@ -144,9 +150,9 @@ public class MqttClientPerformanceTest
 		
 		String msg =
 			String.format(
-				"\\n\\tTesting Publish: QoS = %s | msgs = %s | payload size = %s | start = %s | end = %s | elapsed = %s",
+				"\n\tTesting Publish: QoS = %s | msgs = %s | payload size = %s | start = %s | end = %s | elapsed = %s ms",
 				qos, maxTestRuns, payloadLen,
-				(float) startMillis / 1000, (float) endMillis / 1000, (float) elapsedMillis / 1000);
+				(float) startMillis / 1000, (float) endMillis / 1000, elapsedMillis);
 		
 		_Logger.info(msg);
 	}
