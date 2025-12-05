@@ -8,13 +8,9 @@
  * provided within in order to meet the needs of your specific
  * Programming the Internet of Things project.
  */
-
 package programmingtheiot.data;
 
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -27,7 +23,7 @@ public class DataUtil
 	// static
 	
 	private static final DataUtil _Instance = new DataUtil();
-
+	
 	/**
 	 * Returns the Singleton instance of this class.
 	 * 
@@ -61,9 +57,17 @@ public class DataUtil
 		return null;
 	}
 	
-	public String actuatorDataToTimeAndValueJson(ActuatorData actuatorData)
+	public String actuatorDataToTimeAndValueJson(ActuatorData data)
 	{
-		return null;
+		String jsonData = null;
+		
+		if (data != null) {
+			Gson gson = new Gson();
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(data);
+			jsonData = gson.toJson(tvData);
+		}
+
+		return jsonData;
 	}
 	
 	public String sensorDataToJson(SensorData sensorData)
@@ -71,9 +75,17 @@ public class DataUtil
 		return null;
 	}
 	
-	public String sensorDataToTimeAndValueJson(SensorData sensorData)
+	public String sensorDataToTimeAndValueJson(SensorData data)
 	{
-		return null;
+		String jsonData = null;
+		
+		if (data != null) {
+			Gson gson = new Gson();
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(data);
+			jsonData = gson.toJson(tvData);
+		}
+
+		return jsonData;
 	}
 	
 	public String systemPerformanceDataToJson(SystemPerformanceData sysPerfData)
