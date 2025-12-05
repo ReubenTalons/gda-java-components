@@ -5,7 +5,6 @@
  * 
  * Copyright (c) 2020 - 2025 by Andrew D. King
  */
-
 package programmingtheiot.gda.connection;
 
 import programmingtheiot.common.IDataMessageListener;

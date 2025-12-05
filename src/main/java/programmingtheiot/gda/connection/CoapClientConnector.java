@@ -395,22 +395,23 @@ public class CoapClientConnector implements IRequestResponseClient
 	/**
 	 * Initialize the CoAP client connection.
 	 * Creates a CoapClient instance pointing to the configured server.
+	 * FIXED: Removed the Configuration.getStandard() check that was causing 
+	 * "Configuration contains no definitions!" error.
 	 */
 	private void initClient()
 	{
 		try {
-			// Create the CoAP configuration
-			// NOTE 1: You can create a custom configuration as well
+			// Create the CoAP configuration with proper definitions
+			// NOTE 1: Always create a fresh configuration to avoid file loading issues
 			// NOTE 2: These settings are for UDP only
-			if (Configuration.getStandard() == null) {
-				Configuration config = new Configuration(
-					org.eclipse.californium.core.config.CoapConfig.DEFINITIONS, 
-					UdpConfig.DEFINITIONS
-				);
-				
-				Configuration.setStandard(config);
-				_Logger.info("Initialized Californium configuration with standard definitions");
-			}
+			Configuration config = new Configuration(
+				org.eclipse.californium.core.config.CoapConfig.DEFINITIONS, 
+				UdpConfig.DEFINITIONS
+			);
+			
+			// Set this as the standard configuration
+			Configuration.setStandard(config);
+			_Logger.info("Initialized Californium configuration with standard definitions");
 			
 			// Create the CoAP client
 			this.clientConn = new CoapClient(this.serverAddr);
