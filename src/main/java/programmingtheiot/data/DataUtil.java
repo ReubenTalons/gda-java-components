@@ -57,16 +57,23 @@ public class DataUtil
 		return null;
 	}
 	
-	public String actuatorDataToTimeAndValueJson(ActuatorData data)
+	/**
+	 * Converts ActuatorData to simplified JSON format with only time and value.
+	 * This is useful for cloud services that require minimal payload format.
+	 * 
+	 * @param actuatorData The ActuatorData instance to convert
+	 * @return String JSON representation with time and value, or null if data is null
+	 */
+	public String actuatorDataToTimeAndValueJson(ActuatorData actuatorData)
 	{
 		String jsonData = null;
 		
-		if (data != null) {
+		if (actuatorData != null) {
 			Gson gson = new Gson();
-			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(data);
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(actuatorData);
 			jsonData = gson.toJson(tvData);
 		}
-
+	
 		return jsonData;
 	}
 	
@@ -75,16 +82,23 @@ public class DataUtil
 		return null;
 	}
 	
-	public String sensorDataToTimeAndValueJson(SensorData data)
+	/**
+	 * Converts SensorData to simplified JSON format with only time and value.
+	 * This is useful for cloud services that require minimal payload format.
+	 * 
+	 * @param sensorData The SensorData instance to convert
+	 * @return String JSON representation with time and value, or null if data is null
+	 */
+	public String sensorDataToTimeAndValueJson(SensorData sensorData)
 	{
 		String jsonData = null;
 		
-		if (data != null) {
+		if (sensorData != null) {
 			Gson gson = new Gson();
-			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(data);
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(sensorData);
 			jsonData = gson.toJson(tvData);
 		}
-
+	
 		return jsonData;
 	}
 	

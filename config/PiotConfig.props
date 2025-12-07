@@ -19,7 +19,7 @@ defaultQoS     = 0
 keepAlive      = 60
 useAsyncClient = True
 enableAuth     = True
-enableCrypt    = True
+enableCrypt    = False
 baseUrl        = 
 baseTopic      = 
 #
@@ -31,20 +31,20 @@ host           = localhost
 port           = 25
 securePort     = 587
 enableAuth     = True
-enableCrypt    = True
+enableCrypt    = False
 #
 # MQTT client configuration information
 #
 [Mqtt.GatewayService]
 credFile       = ./cred/PiotMqttCred.props
-certFile       = ./certs/ca.crt
+certFile       = /home/rain/piot/gda-java-components/certs/ca.crt
 host           = localhost
 port           = 1883
 securePort     = 8883
 defaultQoS     = 0
 keepAlive      = 60
 enableAuth     = False
-enableCrypt    = True
+enableCrypt    = False
 useAsyncClient = False
 #
 # CoAP client and server configuration information
@@ -65,7 +65,7 @@ enableConfirmedMsgs = True
 deviceLocationID        = gatewaydevice001
 enableLogging           = True
 pollCycleSecs           = 60
-enableMqttClient        = True
+enableMqttClient        = False
 enableCoapServer        = True
 enableCoapClient        = True
 enableCloudClient       = False
