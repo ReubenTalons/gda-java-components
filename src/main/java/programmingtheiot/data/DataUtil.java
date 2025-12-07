@@ -8,13 +8,9 @@
  * provided within in order to meet the needs of your specific
  * Programming the Internet of Things project.
  */
-
 package programmingtheiot.data;
 
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 
 import com.google.gson.Gson;
 
@@ -27,7 +23,7 @@ public class DataUtil
 	// static
 	
 	private static final DataUtil _Instance = new DataUtil();
-
+	
 	/**
 	 * Returns the Singleton instance of this class.
 	 * 
@@ -61,9 +57,24 @@ public class DataUtil
 		return null;
 	}
 	
+	/**
+	 * Converts ActuatorData to simplified JSON format with only time and value.
+	 * This is useful for cloud services that require minimal payload format.
+	 * 
+	 * @param actuatorData The ActuatorData instance to convert
+	 * @return String JSON representation with time and value, or null if data is null
+	 */
 	public String actuatorDataToTimeAndValueJson(ActuatorData actuatorData)
 	{
-		return null;
+		String jsonData = null;
+		
+		if (actuatorData != null) {
+			Gson gson = new Gson();
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(actuatorData);
+			jsonData = gson.toJson(tvData);
+		}
+	
+		return jsonData;
 	}
 	
 	public String sensorDataToJson(SensorData sensorData)
@@ -71,9 +82,24 @@ public class DataUtil
 		return null;
 	}
 	
+	/**
+	 * Converts SensorData to simplified JSON format with only time and value.
+	 * This is useful for cloud services that require minimal payload format.
+	 * 
+	 * @param sensorData The SensorData instance to convert
+	 * @return String JSON representation with time and value, or null if data is null
+	 */
 	public String sensorDataToTimeAndValueJson(SensorData sensorData)
 	{
-		return null;
+		String jsonData = null;
+		
+		if (sensorData != null) {
+			Gson gson = new Gson();
+			TimeAndValuePayloadData tvData = new TimeAndValuePayloadData(sensorData);
+			jsonData = gson.toJson(tvData);
+		}
+	
+		return jsonData;
 	}
 	
 	public String systemPerformanceDataToJson(SystemPerformanceData sysPerfData)
