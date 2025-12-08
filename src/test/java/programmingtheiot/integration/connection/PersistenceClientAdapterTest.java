@@ -6,7 +6,6 @@
  * 
  * Copyright (c) 2020 - 2025 by Andrew D. King
  */ 
-
 package programmingtheiot.integration.connection;
 
 import static org.junit.Assert.*;
@@ -19,7 +18,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import programmingtheiot.gda.connection.RedisPersistenceAdapter;
+// Commented out for Lab Module 11 - RedisPersistenceAdapter not yet implemented
+// import programmingtheiot.gda.connection.RedisPersistenceAdapter;
 
 /**
  * This test case class contains very basic integration tests for
@@ -39,7 +39,8 @@ public class PersistenceClientAdapterTest
 	
 	// member var's
 	
-	private RedisPersistenceAdapter rpa = null;
+	// Commented out for Lab Module 11 - RedisPersistenceAdapter not yet implemented
+	// private RedisPersistenceAdapter rpa = null;
 	
 	
 	// test setup methods
