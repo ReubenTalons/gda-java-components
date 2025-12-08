@@ -24,7 +24,8 @@ import programmingtheiot.common.ResourceNameEnum;
 import programmingtheiot.data.SensorData;
 import programmingtheiot.data.SystemPerformanceData;
 import programmingtheiot.gda.app.DeviceDataManager;
-import programmingtheiot.gda.connection.*;
+import programmingtheiot.gda.connection.CloudClientConnector;
+import programmingtheiot.gda.connection.ICloudClient;
 
 /**
  * This test case class contains very basic integration tests for
@@ -95,7 +96,7 @@ public class CloudClientConnectorTest
 	/**
 	 * Test method
 	 */
-	@Test
+//	@Test
 	public void testIntegratedCloudClientConnectAndDisconnect()
 	{
 		DeviceDataManager ddm = new DeviceDataManager();
@@ -117,7 +118,7 @@ public class CloudClientConnectorTest
 	/**
 	 * Test method for {@link programmingtheiot.gda.connection.UbidotsMqttCloudClientConnector#publishMessage(programmingtheiot.common.ResourceNameEnum, java.lang.String, int)}.
 	 */
-//	@Test
+	@Test
 	public void testPublishAndSubscribe()
 	{
 		this.cloudClient.setDataMessageListener(new DefaultDataMessageListener());
@@ -197,6 +198,8 @@ public class CloudClientConnectorTest
 		} catch (Exception e) {
 			// ignore
 		}
+		
+		_Logger.info("Test complete.");
 	}
 	
 }
