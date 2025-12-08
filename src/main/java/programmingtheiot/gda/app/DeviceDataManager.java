@@ -18,15 +18,13 @@ import programmingtheiot.common.ConfigUtil;
 import programmingtheiot.common.IActuatorDataListener;
 import programmingtheiot.common.IDataMessageListener;
 import programmingtheiot.common.ResourceNameEnum;
-
 import programmingtheiot.data.ActuatorData;
 import programmingtheiot.data.DataUtil;
 import programmingtheiot.data.SensorData;
 import programmingtheiot.data.SystemPerformanceData;
-
-import programmingtheiot.gda.connection.CloudClientConnector;
 import programmingtheiot.gda.connection.CoapClientConnector;
 import programmingtheiot.gda.connection.CoapServerGateway;
+import programmingtheiot.gda.connection.CloudClientConnector;
 import programmingtheiot.gda.connection.ICloudClient;
 import programmingtheiot.gda.connection.IPersistenceClient;
 import programmingtheiot.gda.connection.IPubSubClient;
@@ -56,7 +54,7 @@ public class DeviceDataManager implements IDataMessageListener
 	private IActuatorDataListener actuatorDataListener = null;
 	private MqttClientConnector mqttClient = null;
 	private CoapClientConnector coapClient = null;
-	private ICloudClient cloudClient = null;  // Changed from IPubSubClient to ICloudClient
+	private ICloudClient cloudClient = null;
 	private IPersistenceClient persistenceClient = null;
 	private IRequestResponseClient smtpClient = null;
 	private CoapServerGateway coapServer = null;
@@ -91,7 +89,7 @@ public class DeviceDataManager implements IDataMessageListener
 		if (data != null) {
 			_Logger.info("Handling actuator response: " + data.getName());
 			
-			// TODO: Add any necessary logic for handling actuator responses
+			// TODO: Add logic to process actuator command response
 			
 			return true;
 		}
@@ -112,13 +110,11 @@ public class DeviceDataManager implements IDataMessageListener
 				_Logger.warning("Error flag set for ActuatorData instance.");
 			}
 			
-			// TODO: Implement logic to send actuator command to CDA
-			// This would typically forward the command to the CDA via MQTT or CoAP
-			
+			// TODO: retrieve this from config file
 			int qos = ConfigConst.DEFAULT_QOS;
 			
-			// For now, just log the command
-			_Logger.info("Processing actuator command for: " + data.getName());
+			// Send actuator command to CDA via MQTT
+			this.sendActuatorCommandToCda(resourceName, data);
 			
 			return true;
 		}
@@ -134,27 +130,25 @@ public class DeviceDataManager implements IDataMessageListener
 				if (resourceName == ResourceNameEnum.CDA_ACTUATOR_CMD_RESOURCE) {
 					_Logger.info("Handling incoming ActuatorData message: " + msg);
 					
-					// Convert JSON to ActuatorData for validation
+					// NOTE: it may seem wasteful to convert to ActuatorData and back while
+					// the JSON data is already available; however, this provides a validation
+					// scheme to ensure the data is actually an 'ActuatorData' instance
+					// prior to sending off to the CDA
 					ActuatorData ad = DataUtil.getInstance().jsonToActuatorData(msg);
-					
-					// Convert back to JSON (validates the data is proper ActuatorData)
 					String jsonData = DataUtil.getInstance().actuatorDataToJson(ad);
 					
-					// Forward to CDA via MQTT
 					if (this.mqttClient != null) {
-						int qos = ConfigConst.DEFAULT_QOS;
-						
-						_Logger.fine("Publishing ActuatorData to CDA via MQTT: " + jsonData);
-						return this.mqttClient.publishMessage(resourceName, jsonData, qos);
+						_Logger.fine("Publishing data to MQTT broker: " + jsonData);
+						return this.mqttClient.publishMessage(resourceName, jsonData, 0);
 					}
 					
-					// TODO: Add CoAP support if needed
-					// if (this.coapClient != null) {
-					//     return this.coapClient.sendPostRequest(...);
-					// }
+					// TODO: If the GDA is hosting a CoAP server (or a CoAP client that
+					// will connect to the CDA's CoAP server), you can add that logic here
+					// in place of the MQTT client or in addition
 					
 				} else {
-					_Logger.warning("Failed to parse incoming message. Unknown resource type: " + resourceName);
+					_Logger.warning("Failed to parse incoming message. Unknown type: " + msg);
+					
 					return false;
 				}
 			} catch (Exception e) {
@@ -181,14 +175,15 @@ public class DeviceDataManager implements IDataMessageListener
 			
 			_Logger.fine("JSON [SensorData] -> " + jsonData);
 			
+			// TODO: retrieve this from config file
 			int qos = ConfigConst.DEFAULT_QOS;
 			
-			// Store data if persistence is enabled
 			if (this.enablePersistenceClient && this.persistenceClient != null) {
-				// this.persistenceClient.storeData(resourceName.getResourceName(), qos, data);
+				this.persistenceClient.storeData(resourceName.getResourceName(), qos, data);
 			}
 			
-			// Send data upstream to cloud
+			this.handleIncomingDataAnalysis(resourceName, data);
+			
 			this.handleUpstreamTransmission(resourceName, data, qos);
 			
 			return true;
@@ -207,12 +202,13 @@ public class DeviceDataManager implements IDataMessageListener
 				_Logger.warning("Error flag set for SystemPerformanceData instance.");
 			}
 			
+			// TODO: retrieve this from config file
 			int qos = ConfigConst.DEFAULT_QOS;
 			
-			// Store data if persistence is enabled
 			// NOTE: You may want to persist your SystemPerformanceData here
 			
-			// Send data upstream to cloud
+			// NOTE: You may want to also analyze the SystemPerformanceData here
+			
 			this.handleUpstreamTransmission(resourceName, data, qos);
 			
 			return true;
@@ -235,15 +231,16 @@ public class DeviceDataManager implements IDataMessageListener
 	{
 		_Logger.info("Starting DeviceDataManager...");
 		
-		// Start cloud client FIRST (before MQTT client)
+		// Start cloud client first (if enabled)
 		if (this.enableCloudClient && this.cloudClient != null) {
 			if (this.cloudClient.connectClient()) {
-				_Logger.info("Successfully connected cloud client to cloud service.");
+				_Logger.info("Successfully connected to cloud service.");
 			} else {
-				_Logger.severe("Failed to connect cloud client to cloud service.");
+				_Logger.severe("Failed to connect to cloud service.");
 			}
 		}
 		
+		// Start MQTT client
 		if (this.mqttClient != null) {
 			if (this.mqttClient.connectClient()) {
 				_Logger.info("Successfully connected MQTT client to broker.");
@@ -269,7 +266,7 @@ public class DeviceDataManager implements IDataMessageListener
 			}
 		}
 		
-		// NEW: Start CoAP server if enabled
+		// Start CoAP server if enabled
 		if (this.enableCoapServer && this.coapServer != null) {
 			if (this.coapServer.startServer()) {
 				_Logger.info("CoAP server started.");
@@ -309,19 +306,19 @@ public class DeviceDataManager implements IDataMessageListener
 			}
 		}
 		
-		// Disconnect cloud client
+		// Stop cloud client (if enabled)
 		if (this.enableCloudClient && this.cloudClient != null) {
-			// Unsubscribe from any cloud topics if needed
-			// this.cloudClient.unsubscribeFromCloudEvents(...);
+			// Unsubscribe from cloud events if necessary
+			// this.cloudClient.unsubscribeFromCloudEvents(ResourceNameEnum.CDA_ACTUATOR_CMD_RESOURCE);
 			
 			if (this.cloudClient.disconnectClient()) {
-				_Logger.info("Successfully disconnected cloud client from cloud service.");
+				_Logger.info("Successfully disconnected from cloud service.");
 			} else {
-				_Logger.severe("Failed to disconnect cloud client from cloud service.");
+				_Logger.severe("Failed to disconnect from cloud service.");
 			}
 		}
 		
-		// NEW: Stop CoAP server if enabled
+		// Stop CoAP server if enabled
 		if (this.enableCoapServer && this.coapServer != null) {
 			if (this.coapServer.stopServer()) {
 				_Logger.info("CoAP server stopped.");
@@ -357,7 +354,7 @@ public class DeviceDataManager implements IDataMessageListener
 			_Logger.info("MQTT client enabled and initialized.");
 		}
 		
-		// NEW: Initialize CoAP server if enabled
+		// Initialize CoAP server if enabled
 		this.enableCoapServer =
 			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE, ConfigConst.ENABLE_COAP_SERVER_KEY);
 		
@@ -366,7 +363,7 @@ public class DeviceDataManager implements IDataMessageListener
 			_Logger.info("CoAP server enabled and initialized.");
 		}
 		
-		// NEW: Initialize CoAP client if enabled
+		// Initialize CoAP client if enabled
 		this.enableCoapClient =
 			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE, ConfigConst.ENABLE_COAP_CLIENT_KEY);
 		
@@ -376,12 +373,13 @@ public class DeviceDataManager implements IDataMessageListener
 			_Logger.info("CoAP client enabled and initialized.");
 		}
 		
-		// NEW: Initialize cloud client if enabled (Lab Module 11)
+		// Initialize cloud client if enabled
 		this.enableCloudClient =
 			configUtil.getBoolean(ConfigConst.GATEWAY_DEVICE, ConfigConst.ENABLE_CLOUD_CLIENT_KEY);
 		
 		if (this.enableCloudClient) {
 			this.cloudClient = new CloudClientConnector();
+			this.cloudClient.setDataMessageListener(this);
 			_Logger.info("Cloud client enabled and initialized.");
 		}
 		
@@ -391,21 +389,33 @@ public class DeviceDataManager implements IDataMessageListener
 	}
 	
 	/**
+	 * Handles incoming data analysis for sensor data.
+	 * 
+	 * @param resource The resource name enum.
+	 * @param data The sensor data to analyze.
+	 */
+	private void handleIncomingDataAnalysis(ResourceNameEnum resource, SensorData data)
+	{
+		// TODO: Add data analysis logic here
+		_Logger.fine("Analyzing incoming sensor data: " + data.getName());
+	}
+	
+	/**
 	 * Handles upstream transmission of sensor data to cloud service.
 	 * 
-	 * @param resourceName The resource name
-	 * @param data The sensor data to send
-	 * @param qos The QoS level
+	 * @param resource The resource name enum.
+	 * @param data The sensor data to send.
+	 * @param qos The QoS level to use.
 	 */
-	private void handleUpstreamTransmission(ResourceNameEnum resourceName, SensorData data, int qos)
+	private void handleUpstreamTransmission(ResourceNameEnum resource, SensorData data, int qos)
 	{
-		_Logger.fine("Sending sensor data to cloud service: " + resourceName);
+		_Logger.fine("Sending sensor data to cloud service: " + resource);
 		
 		if (this.cloudClient != null) {
-			if (this.cloudClient.sendEdgeDataToCloud(resourceName, data)) {
-				_Logger.fine("Sent sensor data upstream to cloud service.");
+			if (this.cloudClient.sendEdgeDataToCloud(resource, data)) {
+				_Logger.fine("Sent sensor data upstream to CSP.");
 			} else {
-				_Logger.warning("Failed to send sensor data to cloud service.");
+				_Logger.warning("Failed to send sensor data to CSP.");
 			}
 		}
 	}
@@ -413,21 +423,42 @@ public class DeviceDataManager implements IDataMessageListener
 	/**
 	 * Handles upstream transmission of system performance data to cloud service.
 	 * 
-	 * @param resourceName The resource name
-	 * @param data The system performance data to send
-	 * @param qos The QoS level
+	 * @param resource The resource name enum.
+	 * @param data The system performance data to send.
+	 * @param qos The QoS level to use.
 	 */
-	private void handleUpstreamTransmission(ResourceNameEnum resourceName, SystemPerformanceData data, int qos)
+	private void handleUpstreamTransmission(ResourceNameEnum resource, SystemPerformanceData data, int qos)
 	{
-		_Logger.fine("Sending system performance data to cloud service: " + resourceName);
+		_Logger.fine("Sending system performance data to cloud service: " + resource);
 		
 		if (this.cloudClient != null) {
-			if (this.cloudClient.sendEdgeDataToCloud(resourceName, data)) {
-				_Logger.fine("Sent system performance data upstream to cloud service.");
+			if (this.cloudClient.sendEdgeDataToCloud(resource, data)) {
+				_Logger.fine("Sent system performance data upstream to CSP.");
 			} else {
-				_Logger.warning("Failed to send system performance data to cloud service.");
+				_Logger.warning("Failed to send system performance data to CSP.");
 			}
 		}
 	}
 	
+	/**
+	 * Sends actuator command to CDA via MQTT.
+	 * 
+	 * @param resource The resource name enum.
+	 * @param data The actuator data command to send.
+	 */
+	private void sendActuatorCommandToCda(ResourceNameEnum resource, ActuatorData data)
+	{
+		if (this.mqttClient != null && this.mqttClient.isConnected()) {
+			String jsonData = DataUtil.getInstance().actuatorDataToJson(data);
+			
+			// TODO: retrieve this from config file
+			int qos = ConfigConst.DEFAULT_QOS;
+			
+			if (this.mqttClient.publishMessage(resource, jsonData, qos)) {
+				_Logger.info("Sent actuator command to CDA: " + data.getName());
+			} else {
+				_Logger.warning("Failed to send actuator command to CDA.");
+			}
+		}
+	}
 }
